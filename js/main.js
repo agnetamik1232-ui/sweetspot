@@ -9,6 +9,7 @@ import * as store from "./store.js";
 
 const params = new URLSearchParams(location.search);
 app.demo = params.has("demo");
+app.photo = app.demo && params.has("photo");
 
 function renderApp() {
   const y = scrollY;
@@ -20,13 +21,41 @@ app.start = () => {
   app.renderFn = renderApp;
   applyLook();
   renderApp();
-  if (app.demo) { if (params.has("welcome")) welcomeBack(6); return; }
+  if (app.demo) { demoExtras(); return; }
   const d = C.daysSinceLastSpend(app.S, app.today);
   if (d != null && d >= 4 && app.S.meta.welcomeBackShown !== app.today) {
     commit(s => { s.meta.welcomeBackShown = app.today; }, { render: false });
     welcomeBack(d);
   }
 };
+
+// Demo only: open a given screen straight away (used for listing photos and videos).
+//   ?demo&photo            hide the demo banner
+//   &look=matcha&dark=on   another look
+//   &view=plan             another page
+//   &open=afford&item=Headphones&price=79 | add&amount=12.40&note=Lunch | welcome | explain | payday | import
+function demoExtras() {
+  const look = params.get("look"), dark = params.get("dark"), view = params.get("view"), open = params.get("open");
+  if (look || dark) { if (look) app.S.profile.look = look; if (dark) app.S.profile.dark = dark; applyLook(); }
+  if (view) app.view = view;
+  if (look || dark || view) render();
+  const fire = (act, el = document.createElement("button")) => actions[act]?.(el);
+  if (params.has("welcome") || open === "welcome") welcomeBack(6);
+  if (open === "explain" || open === "payday" || open === "import") fire(open === "import" ? "import-bank" : open);
+  if (open === "import" && params.get("step") === "2") setTimeout(() => fire("imp-next"), 0);
+  if (open === "add") {
+    fire("add-spend");
+    const pot = params.get("pot") && [...document.querySelectorAll(".potbtn[data-id]")].find(b => b.textContent.toLowerCase().startsWith(params.get("pot").toLowerCase()));
+    if (pot) pot.click();
+    const f = document.querySelector('form[data-form="spend"]');
+    if (f) { f.elements.amount.value = params.get("amount") || ""; f.elements.note.value = params.get("note") || ""; live["spend-amt"](f.elements.amount); f.elements.amount.blur(); }
+  }
+  if (open === "afford") {
+    fire("afford");
+    const f = document.querySelector('form[data-form="afford"]');
+    if (f) { f.elements.name.value = params.get("item") || ""; f.elements.price.value = params.get("price") || ""; live["afford"](); document.activeElement?.blur(); }
+  }
+}
 
 forms["profile"] = f => {
   commit(s => { s.profile.name = f.elements.name.value.trim().slice(0, 30); s.profile.currency = f.elements.currency.value; s.profile.locale = f.elements.locale.value; });

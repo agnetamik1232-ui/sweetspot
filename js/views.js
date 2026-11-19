@@ -14,7 +14,7 @@ export function shell() {
   const cur = k => (v === k || (k === "more" && ["goals", "lookback", "settings", "more"].includes(v)) ? ' aria-current="page"' : "");
   const hide = app.S.profile.hideAmounts;
   return `
-  ${app.demo ? `<div class="demo-bar"><span>Free demo with example numbers. Try anything, nothing is saved.</span><a href="${ETSY_URL}" target="_blank" rel="noopener">Get Sweet Spot</a></div>` : ""}
+  ${app.demo && !app.photo ? `<div class="demo-bar"><span>Free demo with example numbers. Try anything, nothing is saved.</span><a href="${ETSY_URL}" target="_blank" rel="noopener">Get Sweet Spot</a></div>` : ""}
   <header class="top"><div class="top-in">
     <div class="logo fr it">Sweet Spot <img src="${motif()}" alt=""></div>
     <nav class="nav" aria-label="Main">${VIEWS.map(([k, l]) => `<button type="button" data-act="nav" data-view="${k}"${v === k ? ' aria-current="page"' : ""}>${l}</button>`).join("")}</nav>

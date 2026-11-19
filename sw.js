@@ -1,5 +1,5 @@
 // Sweet Spot — keeps the app working offline, and quietly picks up updates in the background.
-const VERSION = "sweetspot-1.0.0";
+const VERSION = "sweetspot-1.0.1";
 const FONTS = "sweetspot-fonts";
 const FILES = [
   "./", "index.html", "manifest.webmanifest", "css/app.css",

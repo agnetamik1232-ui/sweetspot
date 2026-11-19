@@ -443,7 +443,7 @@ forms["payday"] = form => {
 // ============ Welcome back (catch-up) ============
 export function welcomeBack(days) {
   const pots = S().pots;
-  const last = S().tx.filter(t => t.kind === "spend" && t.date <= app.today).map(t => t.date).sort().pop();
+  const last = app.demo ? C.addDays(app.today, -(days || 6)) : S().tx.filter(t => t.kind === "spend" && t.date <= app.today).map(t => t.date).sort().pop();
   openSheet(`<div class="sheet-head"><div class="logo fr it" style="font-size:1.3rem;color:var(--head)">Sweet Spot <img src="img/motif-${S().profile.look}.png" alt="" style="height:1.2rem"></div><button type="button" class="x" data-act="close-sheet">Close</button></div>
     <h2 class="fr" style="font-size:2rem;color:var(--head);line-height:1.1;margin-bottom:.5rem">Welcome back${S().profile.name ? `, <em class="it" style="color:var(--deep)">${esc(S().profile.name)}.</em>` : "."}</h2>
     <p style="font-weight:600;color:var(--head);margin-bottom:1rem">${last ? `Your last spend was ${esc(fd(last))}.` : `It's been ${days || "a few"} days.`} Life happens. Let's catch up in a minute, no need to find every receipt.</p>
@@ -551,8 +551,14 @@ actions["erase-go"] = async () => { await store.wipe(); location.reload(); };
 
 // ============ Bank statement import ============
 let imp = null;
+// In the demo there's no real statement to pick, so a sample one shows how importing works.
+function sampleStatement() {
+  const d = n => C.addDays(app.today, -n);
+  const rows = [[1, "LIDL 4432", -27.35], [1, "COSTA COFFEE 118", -4.2], [2, "SHELL FUEL 22", -38.5], [2, "BLOOM FLOWER STUDIO", -18], [3, "TESCO STORES 2231", -41.9], [3, "NETFLIX.COM", -10.99], [4, "UBER TRIP", -9.4], [4, "REFUND ONLINE ORDER", 24], [5, "CITY PARKING 4", -6], [5, "STARBUCKS 52", -5.1], [6, "ALDI 113", -33.6], [6, "PET SHOP CORNER", -21.75]];
+  return { name: "sample-statement.csv", text: "Date,Description,Amount\n" + rows.map(([n, desc, a]) => `${d(n)},${desc},${a.toFixed(2)}`).join("\n") };
+}
 actions["import-bank"] = async () => {
-  const f = await pickFile(".csv,text/csv,text/plain");
+  const f = app.demo ? sampleStatement() : await pickFile(".csv,text/csv,text/plain");
   if (!f) return;
   const parsed = parseCSV(f.text);
   if (!parsed.rows.length || parsed.header.length < 2) return toast("I couldn't read that file. Try the CSV download from your bank.");
